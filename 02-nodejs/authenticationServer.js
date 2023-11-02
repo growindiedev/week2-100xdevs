@@ -30,8 +30,68 @@
  */
 
 const express = require("express")
-const PORT = 3000;
+//const PORT = 3000;
 const app = express();
-// write your logic here, DONT WRITE app.listen(3000) when you're running tests, the tests will automatically start the server
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
+
+let users = []
+
+app.post("/signup", (req, res) => {
+  const { username, password, firstName, lastName } = req.body;
+
+  if (!username || !password || !firstName || !lastName) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+  if (users.some(user => user.username === username)) {
+    return res.status(400).json({ error: 'Username is already taken' });
+  }
+  const newUser = {
+    id: Math.floor(Math.random() * 1000000),
+    username,
+    password, 
+    firstName,
+    lastName
+  };
+  users.push(newUser);
+  res.sendStatus(201); 
+})
+
+app.post("/login", (req, res) => {
+  const {username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+  
+  const verifiedUser = users.find(user => user.username === username && user.password === password)
+  if(!verifiedUser){
+    return res.status(401).json({ error: 'username or password is incorrect' });
+  }
+  res.status(201).json(verifiedUser);
+})
+
+
+app.get("/data", (req, res) => {
+  const {username, password } = req.headers;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+  
+  const verifiedUser = users.find(user => user.username === username && user.password === password)
+  if(!verifiedUser){
+    return res.status(401).json({ error: 'username or password is incorrect' });
+  }
+  
+  res.status(200).json({users: users.map(user => ({
+   username: user.username,
+    firstName: user.firstName,
+    lastName: user.lastName
+  }))})
+})
+
+// app.listen(PORT, () => {
+//   console.log(`todoServer listening on port ${PORT}`)
+// })
+
 
 module.exports = app;
